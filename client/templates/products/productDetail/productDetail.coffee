@@ -131,6 +131,7 @@ Template.productDetail.events
 
   "click .toggle-product-isVisible-link": (event, template) ->
     errorMsg = ""
+    self = @
     unless @.title
         errorMsg += "Product title is required. "
         template.$(".title-edit-input").focus()
@@ -141,9 +142,29 @@ Template.productDetail.events
         errorMsg += "Variant " + (index + 1) + " price is required. "
 
     if errorMsg.length
-      Alerts.add errorMsg, "danger", placement: "productManagement", i18n_key: "productDetail.errorMsg"
+      Alerts.add errorMsg, "danger", placement: "productManagement", 'id': @._id, i18n_key: "productDetail.errorMsg"
     else
-      Meteor.call "publishProduct", @._id # toggle product visibility
+      Meteor.call "publishProduct", @._id, (error,result) -> # toggle product visibility
+        if error
+          errorMsg = error.message
+          Alerts.add errorMsg, "danger", placement: "productManagement", 'id': self._id, i18n_key: "productDetail.errorMsg"
+          return
+        if result is true
+          Alerts.add self.title + " is now visible",
+            "success",
+              'placement': "productManagement"
+              'id': self._id,
+              'i18n_key': "productDetail.publishProductVisible"
+              'autoHide': true
+              'dismissable': false
+        else
+          Alerts.add self.title + " is hidden",
+            "warning",
+              'placement': "productManagement",
+              'id': self._id,
+              'i18n_key': "productDetail.publishProductHidden"
+              'autoHide': true
+              'dismissable': false
     return
 
   "click .delete-product-link": (event, template) ->
